@@ -45,7 +45,7 @@ NOTES
         for working with Archlinux (i.e Pacman and Aur Updates) but im working on making it more distro indipendant. 
         Enjoy :) 
 
-`Screenshots`
+`Screenshots:`
 
 	If you would like to share your screenshot of these configs please contact setkeh via email or 
 	join #linuxdistrocommunity on freenode :)
