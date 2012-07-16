@@ -122,6 +122,7 @@ myinternetmenu = {
    { "Chromium", "chromium" },
    { "Mumble", "mumble" },
    { "Deluge", "deluge" },
+   { "FileZilla", "filezilla" },
    { "Teamspeak", "teamspeak3" }
 }
 
