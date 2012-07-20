@@ -16,6 +16,7 @@ require("bashets")
 -- Widget Library
 local vicious = require("vicious")
 require("vicious.helpers")
+-- Awesome MPD Library
 require("awesompd/awesompd")
 
 -- {{{ Error handling
@@ -81,10 +82,10 @@ layouts =
 tags = {
    names  = { 
       '1:Default', 
-      '2:Vbox', 
+      '2:Luakit', 
       '3:Chrome', 
       '4:Vim',  
-      '5:VPS', 
+      '5:Vbox', 
       '6:VLC', 
       '7:Games',
       '8:ii',
@@ -92,10 +93,10 @@ tags = {
             },
    layout = {
       layouts[5],   -- 1:default
-      layouts[10],  -- 2:vbox
+      layouts[10],  -- 2:luakit
       layouts[10],  -- 3:chrome
       layouts[10],  -- 4:vim
-      layouts[2],   -- 5:vps
+      layouts[2],   -- 5:vbox
       layouts[10],  -- 6:vlc
       layouts[10],  -- 7:games
       layouts[2],   -- 8:ii
@@ -120,6 +121,7 @@ myawesomemenu = {
 
 myinternetmenu = {
    { "Chromium", "chromium" },
+   { "LuaKit", "luakit" }, 
    { "Mumble", "mumble" },
    { "Deluge", "deluge" },
    { "FileZilla", "filezilla" },
@@ -133,6 +135,7 @@ mymediamenu = {
 }
 
 mytoolsmenu = {
+   { "Key-Mon", "key-mon" },
    { "Virtualbox", "virtualbox" },
    { "Leafpad", "leafpad" },
    { "Vim", "urxvt -bg black -fg green -e vim" },
@@ -157,6 +160,12 @@ mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
 -- }}}
 
 -- bashets	
+
+--Initialize Uptime widget
+--BTC = widget({ type = "textbox" })
+-- Register widget
+--vicious.register(BTC, vicious.widgets.BTC, "BTC: $1")
+
 
 --Bitcoin
 BTC = widget({type="textbox"})
@@ -183,16 +192,16 @@ t:emit_signal("timeout")
 t:start()
 
 --IP
-IP = widget({type="textbox"})
-local t = timer({timeout = 1800})
-t:add_signal("timeout", function()
-local f = io.popen("echo External IP: $(/usr/bin/myip)", "r")
-local s = f:read('*a')
-f:close()
-IP.text = s
-end)
-t:emit_signal("timeout")
-t:start()
+--IP = widget({type="textbox"})
+--local t = timer({timeout = 1800})
+--t:add_signal("timeout", function()
+--local f = io.popen("echo External IP: $(/usr/bin/myip)", "r")
+--local s = f:read('*a')
+--f:close()
+--IP.text = s
+--end)
+--t:emit_signal("timeout")
+--t:start()
 
 --Pacman
 pacman = widget({type="textbox"})
@@ -210,7 +219,7 @@ t:start()
 aur = widget({type="textbox"})
 local t = timer({timeout = 1860})
 t:add_signal("timeout", function()
-local f = io.popen("echo AUR Updates: $(cower -fud | wc -l | tail)", "r")
+local f = io.popen("echo AUR Updates: $(cower -u | wc -l | tail)", "r")
 local s = f:read('*a')
 f:close()
 aur.text = s
@@ -227,9 +236,17 @@ spacer.text  = ' | '
 memwidget = widget({type = "textbox"})
 --memwidget.bg = "#000000"
 vicious.register(memwidget, vicious.widgets.mem,
-    '<span>(Memory: $1% $2MB/$3MB) (Swap: $6MB/$7MB)</span>', 15)
+    '<span>(Memory: $1% $2MB/$3MB) (Swap: $6MB/$7MB)</span>')
 disk = require("diskusage")
 disk.addToWidget(memwidget, 75, 90, true)
+
+--RAM GRAPH usage widget
+graphmemwidget = awful.widget.graph()
+graphmemwidget:set_width(50)
+graphmemwidget:set_background_color("#494B4F")
+graphmemwidget:set_color("#FF5656")
+graphmemwidget:set_gradient_colors({ "#FF5656", "#88A175", "#AECF96" })
+vicious.register(graphmemwidget, vicious.widgets.mem, "$1", 3)
 
 -- Initialize Uptime widget
 uptimewidget = widget({ type = "textbox" })
@@ -240,7 +257,15 @@ vicious.register(uptimewidget, vicious.widgets.uptime, "Uptime: D:$1 H:$2 M:$3")
 -- Initialize widget
 cpuwidget = widget({ type = "textbox" })
 -- Register widget
-vicious.register(cpuwidget, vicious.widgets.cpu, "CPU: A:$1% C1: $2% C2: $3% C3: $4% C4: $5%")
+vicious.register(cpuwidget, vicious.widgets.cpu, "CPU: C1: $2% C2: $3% C3: $4% C4: $5%")
+
+--GraphCPU usage widget
+graphcpuwidget = awful.widget.graph()
+graphcpuwidget:set_width(50)
+graphcpuwidget:set_background_color("#494B4F")
+graphcpuwidget:set_color("#FF5656")
+graphcpuwidget:set_gradient_colors({ "#FF5656", "#88A175", "#AECF96" })
+vicious.register(graphcpuwidget, vicious.widgets.cpu, "$1", 3)
 
 -- Initialize widget MPD
 -- awesome.naquadah.org/wiki/Awesompd_widget
@@ -380,7 +405,7 @@ for s = 1, screen.count() do
             layout = awful.widget.layout.horizontal.leftright
         },
         mylayoutbox[s],
-        mytextclock, musicwidget.widget,
+        mytextclock, musicwidget.widget, uptimewidget,
         s == 1 and mysystray or nil,
         mytasklist[s],
         layout = awful.widget.layout.horizontal.rightleft
@@ -390,7 +415,21 @@ for s = 1, screen.count() do
    -- Create the bottom wibox
    myinfowibox[s] = awful.wibox({ position = "bottom", screen = s })
    -- Add widgets to the bottom wibox
-     myinfowibox[s].widgets = { BTC, spacer, NMC, spacer, pacman, spacer, aur, spacer, memwidget, spacer, cpuwidget, spacer, uptimewidget, spacer,
+     myinfowibox[s].widgets = { 
+     BTC, 
+     spacer,
+     NMC, 
+     spacer,
+     pacman,
+     spacer,
+     aur,
+     spacer, 
+     graphmemwidget, 
+     memwidget, 
+     spacer, 
+     graphcpuwidget, 
+     cpuwidget, 
+     spacer,
      layout = awful.widget.layout.horizontal.leftright}
 
    -- Create the right wibox
@@ -426,8 +465,8 @@ globalkeys = awful.util.table.join(
             awful.client.focus.byidx(-1)
             if client.focus then client.focus:raise() end
         end),
-    awful.key({ modkey,           }, "w", function () mymainmenu:show({keygrabber=true}) end),
-    awful.key({ }, "Print", function () awful.util.spawn("upload_screens scr") end),
+
+	awful.key({ }, "Print", function () awful.util.spawn("upload_screens scr") end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
@@ -456,6 +495,8 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey, "Control" }, "l",     function () awful.tag.incncol(-1)         end),
     awful.key({ modkey,           }, "space", function () awful.layout.inc(layouts,  1) end),
     awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(layouts, -1) end),
+    awful.key({ modkey,           }, "w",     function () awful.util.spawn("luakit")    end),
+
 
     awful.key({ modkey, "Control" }, "n", awful.client.restore),
 
@@ -562,11 +603,14 @@ awful.rules.rules = {
      { rule = { class = "Vlc" },
        properties = { tag = tags[2][6] } },
      { rule = { class = "VirtualBox" },
-       properties = { tag = tags[1][2] } },
+       properties = { tag = tags[1][5] } },
      { rule = { class = "Bitcoin-qt" },
        properties = { tag = tags[1][9] } },
      { rule = { class = "gvim" },
        properties = { tag = tags[1][4] } },
+     { rule = { class = "luakit" },
+       properties = { tag = tags[1][2] } },
+  
 
 }
 -- }}}
