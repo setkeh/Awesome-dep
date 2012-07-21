@@ -12,7 +12,7 @@ require("beautiful")
 -- Notification library
 require("naughty")
 -- Bash Configuration
-require("bashets")
+--require("bashets")
 -- Widget Library
 local vicious = require("vicious")
 require("vicious.helpers")
@@ -83,23 +83,23 @@ tags = {
    names  = { 
       '1:Default', 
       '2:Luakit', 
-      '3:Chrome', 
+      '3:Emerge', 
       '4:Vim',  
       '5:Vbox', 
       '6:VLC', 
       '7:Games',
-      '8:ii',
+      '8:Chrome',
       '9:Bitcoin',
             },
    layout = {
       layouts[5],   -- 1:default
       layouts[10],  -- 2:luakit
-      layouts[10],  -- 3:chrome
+      layouts[5],  -- 3:emerge
       layouts[10],  -- 4:vim
       layouts[2],   -- 5:vbox
       layouts[10],  -- 6:vlc
       layouts[10],  -- 7:games
-      layouts[2],   -- 8:ii
+      layouts[10],   -- 8:chrome
       layouts[10],  -- 9:bitcoin
             }
         }
@@ -168,28 +168,28 @@ mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
 
 
 --Bitcoin
-BTC = widget({type="textbox"})
-local t = timer({timeout = 300})
-t:add_signal("timeout", function()
-local f = io.popen("echo Bitcoin: $(/etc/wmii/bitcoin)", "r")
-local s = f:read('*a')
-f:close()
-BTC.text = s
-end)
-t:emit_signal("timeout")
-t:start()
+--BTC = widget({type="textbox"})
+--local t = timer({timeout = 300})
+--t:add_signal("timeout", function()
+--local f = io.popen("echo Bitcoin: $(/etc/wmii/bitcoin)", "r")
+--local s = f:read('*a')
+--f:close()
+--BTC.text = s
+--end)
+--t:emit_signal("timeout")
+--t:start()
 
 --Namecoin
-NMC = widget({type="textbox"})
-local t = timer({timeout = 305})
-t:add_signal("timeout", function()
-local f = io.popen("echo NMC: $(namecoind listaccounts | grep MasterWallet | cut -c 22-32)", "r")
-local s = f:read('*a')
-f:close()
-NMC.text = s
-end)
-t:emit_signal("timeout")
-t:start()
+--NMC = widget({type="textbox"})
+--local t = timer({timeout = 305})
+--t:add_signal("timeout", function()
+--local f = io.popen("echo NMC: $(namecoind listaccounts | grep MasterWallet | cut -c 22-32)", "r")
+--local s = f:read('*a')
+--f:close()
+--NMC.text = s
+--end)
+--t:emit_signal("timeout")
+--t:start()
 
 --IP
 --IP = widget({type="textbox"})
@@ -204,28 +204,28 @@ t:start()
 --t:start()
 
 --Pacman
-pacman = widget({type="textbox"})
-local t = timer({timeout = 1850})
-t:add_signal("timeout", function()
-local f = io.popen("echo Pacman Updates: $(pacman -Qqu | wc -l | tail)", "r")
-local s = f:read('*a')
-f:close()
-pacman.text = s
-end)
-t:emit_signal("timeout")
-t:start()
+--pacman = widget({type="textbox"})
+--local t = timer({timeout = 1850})
+--t:add_signal("timeout", function()
+--local f = io.popen("echo Pacman Updates: $(pacman -Qqu | wc -l | tail)", "r")
+--local s = f:read('*a')
+--f:close()
+--pacman.text = s
+--end)
+--t:emit_signal("timeout")
+--t:start()
 
 --AUR
-aur = widget({type="textbox"})
-local t = timer({timeout = 1860})
-t:add_signal("timeout", function()
-local f = io.popen("echo AUR Updates: $(cower -u | wc -l | tail)", "r")
-local s = f:read('*a')
-f:close()
-aur.text = s
-end)
-t:emit_signal("timeout")
-t:start()
+--aur = widget({type="textbox"})
+--local t = timer({timeout = 1860})
+--t:add_signal("timeout", function()
+--local f = io.popen("echo AUR Updates: $(cower -u | wc -l | tail)", "r")
+--local s = f:read('*a')
+--f:close()
+--aur.text = s
+--end)
+--t:emit_signal("timeout")
+--t:start()
 
 spacer       = widget({ type = "textbox"  })
 spacer.text  = ' | '
@@ -416,14 +416,14 @@ for s = 1, screen.count() do
    myinfowibox[s] = awful.wibox({ position = "bottom", screen = s })
    -- Add widgets to the bottom wibox
      myinfowibox[s].widgets = { 
-     BTC, 
-     spacer,
-     NMC, 
-     spacer,
-     pacman,
-     spacer,
-     aur,
-     spacer, 
+--     BTC, 
+--     spacer,
+--     NMC, 
+--     spacer,
+--     pacman,
+--     spacer,
+--     aur,
+--     spacer, 
      graphmemwidget, 
      memwidget, 
      spacer, 
@@ -599,7 +599,7 @@ awful.rules.rules = {
       properties = { floating = true } },
     -- Set Firefox to always map on tags number 2 of screen 1.
      { rule = { class = "Chromium" },
-       properties = { tag = tags[1][3] } },
+       properties = { tag = tags[1][8] } },
      { rule = { class = "Vlc" },
        properties = { tag = tags[2][6] } },
      { rule = { class = "VirtualBox" },
