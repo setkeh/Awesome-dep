@@ -11,13 +11,21 @@ require("wibox")
 require("beautiful")
 -- Notification library
 require("naughty")
--- Bash Configuration
+-- Bash COnfiguration
 --require("bashets")
 -- Widget Library
 local vicious = require("vicious")
 require("vicious.helpers")
+--Keybinding Library
+local keydoc = require("keydoc")
 -- Awesome MPD Library
 require("awesompd/awesompd")
+--FreeDesktop
+require('freedesktop.utils')
+require('freedesktop.menu')
+freedesktop.utils.icon_theme = 'gnome'
+--BlingBling widgets
+require("blingbling")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -44,14 +52,16 @@ do
 end
 -- }}}
 
--- {{{ Variable definitions
--- Themes define colours, icons, and wallpapers
-beautiful.init("/home/setkeh/.config/awesome/themes/default/theme.lua")
-
 -- This is used later as the default terminal and editor to run.
 terminal = "urxvt -fg green -bg black"
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
+home_path  = os.getenv('HOME') .. '/'
+
+-- {{{ Variable definitions
+-- Themes define colours, icons, and wallpapers
+local theme_path = home_path  .. '.config/awesome/themes/default/theme.lua'
+beautiful.init(theme_path)
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -81,26 +91,26 @@ layouts =
 -- Define a tag table which hold all screen tags.
 tags = {
    names  = { 
-      '1:Default', 
-      '2:Luakit', 
-      '3:Emerge', 
-      '4:Vim',  
-      '5:Vbox', 
-      '6:VLC', 
-      '7:Games',
-      '8:Chrome',
-      '9:Bitcoin',
+      '☭:IRC',
+      '⚡:Luakit', 
+      '♨:Chrome', 
+      '☠:Vim',  
+      '☃:Vbox', 
+      '⌥:Multimedia', 
+      '⌘:Conky',
+      '✇:IDE',
+      '✣:Facepalm',
             },
    layout = {
-      layouts[5],   -- 1:default
+      layouts[5],   -- 1:irc
       layouts[10],  -- 2:luakit
-      layouts[5],  -- 3:emerge
-      layouts[10],  -- 4:vim
+      layouts[10],  -- 3:chrome
+      layouts[12],  -- 4:vim
       layouts[2],   -- 5:vbox
-      layouts[10],  -- 6:vlc
-      layouts[10],  -- 7:games
-      layouts[10],   -- 8:chrome
-      layouts[10],  -- 9:bitcoin
+      layouts[10],  -- 6:multimedia
+      layouts[10],  -- 7:conky
+      layouts[2],   -- 8:ide
+      layouts[10],  -- 9:facepalm
             }
         }
 
@@ -110,102 +120,50 @@ for s = 1, screen.count() do
 end
 -- }}}
 
+-- Wallpaper Changer Based On 
+-- menu icon menu pdq 07-02-2012
+local wallmenu = {}
+local function wall_load(wall)
+local f = io.popen('ln -sfn ' .. home_path .. '.config/awesome/wallpaper/' .. wall .. ' ' .. home_path .. '.config/awesome/themes/default/bg.png')
+awesome.restart()
+end
+local function wall_menu()
+local f = io.popen('ls -1 ' .. home_path .. '.config/awesome/wallpaper/')
+for l in f:lines() do
+local item = { l, function () wall_load(l) end }
+table.insert(wallmenu, item)
+end
+f:close()
+end
+wall_menu()
+
 -- {{{ Menu
 -- Create a laucher widget and a main menu
+menu_items = freedesktop.menu.new()
 myawesomemenu = {
-   { "manual", terminal .. " -e man awesome" },
-   { "edit config", editor_cmd .. " " .. awesome.conffile },
-   { "restart", awesome.restart },
-   { "quit", awesome.quit }
+   { "manual", terminal .. " -e man awesome", freedesktop.utils.lookup_icon({ icon = 'help' }) },
+   { "edit config", editor_cmd .. " " .. awesome.conffile, freedesktop.utils.lookup_icon({ icon = 'package_settings' }) },
+   { "restart", awesome.restart, freedesktop.utils.lookup_icon({ icon = 'system-shutdown' }) },
+   { "quit", awesome.quit, freedesktop.utils.lookup_icon({ icon = 'system-shutdown' }) }
 }
 
-myinternetmenu = {
-   { "Chromium", "chromium" },
-   { "LuaKit", "luakit" }, 
-   { "Mumble", "mumble" },
-   { "Deluge", "deluge" },
-   { "FileZilla", "filezilla" },
-   { "Teamspeak", "teamspeak3" }
-}
+table.insert(menu_items, { "Awesome", myawesomemenu, beautiful.awesome_icon })
 
-mymediamenu = {
-   { "Vlc", "vlc" },
-   { "KdenLive", "kdenlive" },
-   { "Pavucontrol", "pavucontrol" }
-}
+table.insert(menu_items, { "Wallpaper", wallmenu, freedesktop.utils.lookup_icon({ icon = 'gnome-settings-background' })}) 
 
-mytoolsmenu = {
-   { "Key-Mon", "key-mon" },
-   { "Virtualbox", "virtualbox" },
-   { "Leafpad", "leafpad" },
-   { "Vim", "urxvt -bg black -fg green -e vim" },
-   { "Gvim", "gvim" }
-}
+mymainmenu = awful.menu({ items = menu_items, width = 150 })
 
-mygamesmenu = {
-   { "Urban Terror", "urbanterror" },
-}
-
-mymainmenu = awful.menu({ items = { { "Awesome", myawesomemenu, beautiful.awesome_icon },
-				    { "Internet", myinternetmenu, beautiful.awesome_icon },
-				    { "Multimedia", mymediamenu, beautiful.awesome_icon },
-				    { "Tools", mytoolsmenu, beautiful.awesome_icon },
-				    { "Games", mygamesmenu, beautiful.awesome_icon },
-                                    { "open terminal", terminal, beautiful.awesome_icon }
-                                  }
-                        })
-
-mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
+mylauncher = awful.widget.launcher({ image = image(beautiful.arch_icon),
                                      menu = mymainmenu })
 -- }}}
 
--- bashets	
-
---Initialize Uptime widget
---BTC = widget({ type = "textbox" })
--- Register widget
---vicious.register(BTC, vicious.widgets.BTC, "BTC: $1")
-
-
---Bitcoin
---BTC = widget({type="textbox"})
---local t = timer({timeout = 300})
---t:add_signal("timeout", function()
---local f = io.popen("echo Bitcoin: $(/etc/wmii/bitcoin)", "r")
---local s = f:read('*a')
---f:close()
---BTC.text = s
---end)
---t:emit_signal("timeout")
---t:start()
-
---Namecoin
---NMC = widget({type="textbox"})
---local t = timer({timeout = 305})
---t:add_signal("timeout", function()
---local f = io.popen("echo NMC: $(namecoind listaccounts | grep MasterWallet | cut -c 22-32)", "r")
---local s = f:read('*a')
---f:close()
---NMC.text = s
---end)
---t:emit_signal("timeout")
---t:start()
-
---IP
---IP = widget({type="textbox"})
---local t = timer({timeout = 1800})
---t:add_signal("timeout", function()
---local f = io.popen("echo External IP: $(/usr/bin/myip)", "r")
---local s = f:read('*a')
---f:close()
---IP.text = s
---end)
---t:emit_signal("timeout")
---t:start()
+--Bashettes
+-- These Bashettes are For Archlinux
+-- More coming Soon
 
 --Pacman
 --pacman = widget({type="textbox"})
---local t = timer({timeout = 1850})
+--local t = timer({timeout = 280})
 --t:add_signal("timeout", function()
 --local f = io.popen("echo Pacman Updates: $(pacman -Qqu | wc -l | tail)", "r")
 --local s = f:read('*a')
@@ -214,10 +172,12 @@ mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
 --end)
 --t:emit_signal("timeout")
 --t:start()
+--pacmanup = require("pacmanup")
+--pacmanup.addToWidget(pacman, 280, 90, true)
 
 --AUR
 --aur = widget({type="textbox"})
---local t = timer({timeout = 1860})
+--local t = timer({timeout = 240})
 --t:add_signal("timeout", function()
 --local f = io.popen("echo AUR Updates: $(cower -u | wc -l | tail)", "r")
 --local s = f:read('*a')
@@ -226,51 +186,104 @@ mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
 --end)
 --t:emit_signal("timeout")
 --t:start()
+--aurup = require("aurup")
+--aurup.addToWidget(aur, 240, 90, true)
 
 spacer       = widget({ type = "textbox"  })
 spacer.text  = ' | '
 
---Vicious Widgets Derived from http://awesome.naquadah.org/wiki/Vicious
+--Weather Widget
+weather = widget({ type = "textbox" })
+vicious.register(weather, vicious.widgets.weather, "Weather: ${city}. Sky: ${sky}. Temp: ${tempc}c Humid: ${humid}% Press: ${press} KPA. Wind: ${windkmh} KM/h", 1200, "YMML")
 
--- Initialize Memory widget
-memwidget = widget({type = "textbox"})
---memwidget.bg = "#000000"
-vicious.register(memwidget, vicious.widgets.mem,
-    '<span>(Memory: $1% $2MB/$3MB) (Swap: $6MB/$7MB)</span>')
-disk = require("diskusage")
-disk.addToWidget(memwidget, 75, 90, true)
-
---RAM GRAPH usage widget
-graphmemwidget = awful.widget.graph()
-graphmemwidget:set_width(50)
-graphmemwidget:set_background_color("#494B4F")
-graphmemwidget:set_color("#FF5656")
-graphmemwidget:set_gradient_colors({ "#FF5656", "#88A175", "#AECF96" })
-vicious.register(graphmemwidget, vicious.widgets.mem, "$1", 3)
+--BlingBling Widgets
+--
+cpulabel= widget({ type = "textbox" })
+cpulabel.text='CPU: '
+--
+mycairograph=blingbling.classical_graph.new()
+mycairograph:set_height(18)
+mycairograph:set_width(200)
+mycairograph:set_tiles_color("#00000022")
+mycairograph:set_show_text(true)
+mycairograph:set_label("Load: $percent %")
+--
+--bind top popup on the graph
+blingbling.popups.htop(mycairograph.widget,
+       { title_color =beautiful.notify_font_color_1, 
+          user_color= beautiful.notify_font_color_2, 
+          root_color=beautiful.notify_font_color_3, 
+          terminal = "urxvt"})
+vicious.register(mycairograph, vicious.widgets.cpu,'$1',2)
+--
+memwidget=blingbling.classical_graph.new()
+memwidget:set_height(18)
+memwidget:set_width(200)
+memwidget:set_tiles_color("#00000022")
+memwidget:set_show_text(true)
+vicious.register(memwidget, vicious.widgets.mem, '$2', 1)
+--
+corelabel= widget({ type = "textbox" })
+corelabel.text='Cores: '
+--
+mycore1=blingbling.progress_graph.new()
+mycore1:set_height(18)
+mycore1:set_width(6)
+mycore1:set_filled(true)
+mycore1:set_h_margin(1)
+mycore1:set_filled_color("#00000033")
+vicious.register(mycore1, vicious.widgets.cpu, "$2")
+-- 
+mycore2=blingbling.progress_graph.new()
+mycore2:set_height(18)
+mycore2:set_width(6)
+mycore2:set_filled(true)
+mycore2:set_h_margin(1)
+mycore2:set_filled_color("#00000033")
+vicious.register(mycore2, vicious.widgets.cpu, "$3")
+--
+mycore3=blingbling.progress_graph.new()
+mycore3:set_height(18)
+mycore3:set_width(6)
+mycore3:set_filled(true)
+mycore3:set_h_margin(1)
+mycore3:set_filled_color("#00000033")
+vicious.register(mycore3, vicious.widgets.cpu, "$4")
+--
+mycore4=blingbling.progress_graph.new()
+mycore4:set_height(18)
+mycore4:set_width(6)
+mycore4:set_filled(true)
+mycore4:set_h_margin(1)
+mycore4:set_filled_color("#00000033")
+vicious.register(mycore4, vicious.widgets.cpu, "$5")
+--
+memlabel= widget({ type = "textbox" })
+memlabel.text='MEM: '
+memwidget=blingbling.classical_graph.new()
+memwidget:set_height(18)
+memwidget:set_width(200)
+memwidget:set_tiles_color("#00000022")
+memwidget:set_show_text(true)
+vicious.register(memwidget, vicious.widgets.mem, '$1', 2)
+--
+-- Initialize widget
+oswidget = widget({ type = "textbox" })
+-- Register widget
+vicious.register(oswidget, vicious.widgets.os, "$3@$4")
+sys = require("sysinf")
+sys.addToWidget(oswidget, 240, 90, true)
 
 -- Initialize Uptime widget
 uptimewidget = widget({ type = "textbox" })
 -- Register widget
 vicious.register(uptimewidget, vicious.widgets.uptime, "Uptime: D:$1 H:$2 M:$3")
 
-
--- Initialize widget
-cpuwidget = widget({ type = "textbox" })
--- Register widget
-vicious.register(cpuwidget, vicious.widgets.cpu, "CPU: C1: $2% C2: $3% C3: $4% C4: $5%")
-
---GraphCPU usage widget
-graphcpuwidget = awful.widget.graph()
-graphcpuwidget:set_width(50)
-graphcpuwidget:set_background_color("#494B4F")
-graphcpuwidget:set_color("#FF5656")
-graphcpuwidget:set_gradient_colors({ "#FF5656", "#88A175", "#AECF96" })
-vicious.register(graphcpuwidget, vicious.widgets.cpu, "$1", 3)
-
+-- MPD WIDGET
 -- Initialize widget MPD
 -- awesome.naquadah.org/wiki/Awesompd_widget
 musicwidget = awesompd:create() -- Create awesompd widget
-musicwidget.font = 'DejaVu Sans Mono' -- Set widget font 
+musicwidget.font = 'terminus' -- Set widget font 
 musicwidget.scrolling = true -- If true, the text in the widget will be scrolled
 musicwidget.output_size = 30 -- Set the size of widget in symbols
 musicwidget.update_interval = 10 -- Set the update interval in seconds
@@ -291,34 +304,33 @@ musicwidget.album_cover_size = 50
 musicwidget.mpd_config = "/etc/mpd.conf"
 -- Specify the browser you use so awesompd can open links from
 -- Jamendo in it.
-musicwidget.browser = 'chromium'
+musicwidget.browser = 'luakit'
 -- Specify decorators on the left and the right side of the
 -- widget. Or just leave empty strings if you decorate the widget
 -- from outside.
-musicwidget.ldecorator = ' &#9835; '
-musicwidget.rdecorator = ' &#9835; '
+ musicwidget.ldecorator = ' &#9835; '
+ musicwidget.rdecorator = ' &#9835; '
 -- Set all the servers to work with (here can be any servers you use)
 musicwidget.servers = {
-  { server = 'localhost',
-       port = 6600 } }
+{ server = 'localhost',
+port = 6600 } }
 --  { server = '192.168.0.72',
 --       port = 6600 } }
 -- Set the buttons of the widget
 musicwidget:register_buttons({ { '', awesompd.MOUSE_LEFT, musicwidget:command_toggle() },
-                            { 'Control', awesompd.MOUSE_SCROLL_UP, musicwidget:command_prev_track() },
-                            { 'Control', awesompd.MOUSE_SCROLL_DOWN, musicwidget:command_next_track() },
-                            { '', 'XF86AudioPrev', musicwidget:command_prev_track() },
-                            { '', 'XF86AudioNext', musicwidget:command_next_track() },
-                            { '', awesompd.MOUSE_SCROLL_UP, musicwidget:command_volume_up() },
-                            { '', awesompd.MOUSE_SCROLL_DOWN, musicwidget:command_volume_down() },
-                            { '', awesompd.MOUSE_RIGHT, musicwidget:command_show_menu() },
-                            { modkey, 'XF86AudioLowerVolume', musicwidget:command_volume_down() },
-                            { modkey, 'XF86AudioRaiseVolume', musicwidget:command_volume_up() },
-                            { '', 'XF86AudioStop', musicwidget:command_stop() },
-                            { '', 'XF86AudioPlay', musicwidget:command_playpause() } })
+                             { 'Control', awesompd.MOUSE_SCROLL_UP, musicwidget:command_prev_track() },
+                             { 'Control', awesompd.MOUSE_SCROLL_DOWN, musicwidget:command_next_track() },
+                             { '', 'XF86AudioPrev', musicwidget:command_prev_track() },
+			     { '', 'XF86AudioNext', musicwidget:command_next_track() },
+			     { '', awesompd.MOUSE_SCROLL_UP, musicwidget:command_volume_up() },
+			     { '', awesompd.MOUSE_SCROLL_DOWN, musicwidget:command_volume_down() },
+			     { '', awesompd.MOUSE_RIGHT, musicwidget:command_show_menu() },
+			     { modkey, 'XF86AudioLowerVolume', musicwidget:command_volume_down() },
+			     { modkey, 'XF86AudioRaiseVolume', musicwidget:command_volume_up() },
+			     { '', 'XF86AudioStop', musicwidget:command_stop() },
+			     { '', 'XF86AudioPlay', musicwidget:command_playpause() } })
 musicwidget:run() -- After all configuration is done, run the widget
 -- End mpd
-
 
 -- {{{ Wibox
 -- Create a textclock widget
@@ -330,7 +342,6 @@ mysystray = widget({ type = "systray" })
 -- Create a wibox for each screen and add it
 mywibox = {}
 myinfowibox = {}
---myinfowibox2 = {}
 mypromptbox = {}
 mylayoutbox = {}
 mytaglist = {}
@@ -405,9 +416,9 @@ for s = 1, screen.count() do
             layout = awful.widget.layout.horizontal.leftright
         },
         mylayoutbox[s],
-        mytextclock, musicwidget.widget, uptimewidget,
-        s == 1 and mysystray or nil,
-        mytasklist[s],
+        mytextclock, spacer, uptimewidget, spacer, musicwidget.widget,
+ --       s == 1 and mysystray or nil,
+ 	mytasklist[s],
         layout = awful.widget.layout.horizontal.rightleft
     }
    
@@ -416,27 +427,23 @@ for s = 1, screen.count() do
    myinfowibox[s] = awful.wibox({ position = "bottom", screen = s })
    -- Add widgets to the bottom wibox
      myinfowibox[s].widgets = { 
---     BTC, 
---     spacer,
---     NMC, 
---     spacer,
---     pacman,
---     spacer,
---     aur,
---     spacer, 
-     graphmemwidget, 
-     memwidget, 
-     spacer, 
-     graphcpuwidget, 
-     cpuwidget, 
-     spacer,
+	     cpulabel,
+	     mycairograph,
+	     spacer,
+	     corelabel,
+	     mycore1,
+	     mycore2,
+	     mycore3,
+	     mycore4,
+	     spacer,
+	     memlabel,
+	     memwidget,
+	     spacer,
+	     weather,
+	     spacer,
+	     s == 1 and mysystray or nil,
+--	     mytasklist[s],
      layout = awful.widget.layout.horizontal.leftright}
-
-   -- Create the right wibox
-   --myinfowibox2[s] = awful.wibox({ position = "right", screen = s })
-   -- Add widgets to the bottom wibox
-   --myinfowibox2[s].widgets = { musicwidget.widget,
-   --layout = awful.widget.layout.horizontal.leftright}
 
 end
 -- }}}
@@ -454,6 +461,7 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "Left",   awful.tag.viewprev       ),
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
+    awful.key({ modkey,           }, "F1",     keydoc.display),
 
     awful.key({ modkey,           }, "j",
         function ()
@@ -465,12 +473,12 @@ globalkeys = awful.util.table.join(
             awful.client.focus.byidx(-1)
             if client.focus then client.focus:raise() end
         end),
-
-	awful.key({ }, "Print", function () awful.util.spawn("upload_screens scr") end),
+    awful.key({ }, "Print", function () awful.util.spawn("upload_screens scr") end),
 
     -- Layout manipulation
-    awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
-    awful.key({ modkey, "Shift"   }, "k", function () awful.client.swap.byidx( -1)    end),
+    keydoc.group("Layout manipulation"),
+    awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end, "Swap With Next Window"),
+    awful.key({ modkey, "Shift"   }, "k", function () awful.client.swap.byidx( -1)    end, "Swap With Previous Window"),
     awful.key({ modkey, "Control" }, "j", function () awful.screen.focus_relative( 1) end),
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end),
     awful.key({ modkey,           }, "u", awful.client.urgent.jumpto),
@@ -480,22 +488,24 @@ globalkeys = awful.util.table.join(
             if client.focus then
                 client.focus:raise()
             end
-        end),
+        end, "Cycle Windows, Windows Style"),
 
     -- Standard program
-    awful.key({ modkey,           }, "Return", function () awful.util.spawn(terminal) end),
-    awful.key({ modkey, "Control" }, "r", awesome.restart),
-    awful.key({ modkey, "Shift"   }, "q", awesome.quit),
+    keydoc.group("Programs"),
+    awful.key({ modkey,           }, "Return", function () awful.util.spawn(terminal) end, "Start RXVT-Unicode"),
+    awful.key({ modkey, "Control" }, "r", awesome.restart, "Restart Awesome"),
+    awful.key({ modkey, "Shift"   }, "q", awesome.quit, "Quit Awesome"),
 
-    awful.key({ modkey,           }, "l",     function () awful.tag.incmwfact( 0.05)    end),
-    awful.key({ modkey,           }, "h",     function () awful.tag.incmwfact(-0.05)    end),
+    awful.key({ modkey,           }, "l",     function () awful.tag.incmwfact( 0.05)    end, "Increase Window Size"),
+    awful.key({ modkey,           }, "h",     function () awful.tag.incmwfact(-0.05)    end, "Decrese Window Size"),
     awful.key({ modkey, "Shift"   }, "h",     function () awful.tag.incnmaster( 1)      end),
     awful.key({ modkey, "Shift"   }, "l",     function () awful.tag.incnmaster(-1)      end),
     awful.key({ modkey, "Control" }, "h",     function () awful.tag.incncol( 1)         end),
     awful.key({ modkey, "Control" }, "l",     function () awful.tag.incncol(-1)         end),
-    awful.key({ modkey,           }, "space", function () awful.layout.inc(layouts,  1) end),
-    awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(layouts, -1) end),
-    awful.key({ modkey,           }, "w",     function () awful.util.spawn("luakit")    end),
+    awful.key({ modkey,           }, "space", function () awful.layout.inc(layouts,  1) end, "Cycle Layouts Forwards"),
+    awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(layouts, -1) end, "Cycle Layouts Reverse"),
+    awful.key({ modkey,           }, "w",     function () awful.util.spawn("luakit")    end, "Start Luakit Web Browser"),
+    awful.key({ modkey,           }, "a", function () mymainmenu:show({keygrabber=true}) end, "Show Main Menu"),
 
 
     awful.key({ modkey, "Control" }, "n", awful.client.restore),
@@ -511,21 +521,21 @@ globalkeys = awful.util.table.join(
                   awful.util.getdir("cache") .. "/history_eval")
               end)
 )
-
+keydoc.group("Window Management")
 clientkeys = awful.util.table.join(
-    awful.key({ modkey,           }, "f",      function (c) c.fullscreen = not c.fullscreen  end),
-    awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end),
+    awful.key({ modkey,           }, "f",      function (c) c.fullscreen = not c.fullscreen  end, "Toggle Fulscreen"),
+    awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end, "Kill Window"),
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle                     ),
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end),
     awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
-    awful.key({ modkey, "Shift"   }, "r",      function (c) c:redraw()                       end),
+    awful.key({ modkey, "Shift"   }, "r",      function (c) c:redraw()                       end, "Redraw Window"),
     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end),
     awful.key({ modkey,           }, "n",
         function (c)
             -- The client currently has the input focus, so it cannot be
             -- minimized, since minimized clients can't have the focus.
             c.minimized = true
-        end),
+        end, "Minimise Window"),
     awful.key({ modkey,           }, "m",
         function (c)
             c.maximized_horizontal = not c.maximized_horizontal
@@ -599,18 +609,17 @@ awful.rules.rules = {
       properties = { floating = true } },
     -- Set Firefox to always map on tags number 2 of screen 1.
      { rule = { class = "Chromium" },
-       properties = { tag = tags[1][8] } },
+       properties = { tag = tags[1][3] } },
      { rule = { class = "Vlc" },
-       properties = { tag = tags[2][6] } },
+       properties = { tag = tags[1][6] } },
      { rule = { class = "VirtualBox" },
+       properties = { tag = tags[1][5] } },
+     { rule = { class = "Gns3" },
        properties = { tag = tags[1][5] } },
      { rule = { class = "Bitcoin-qt" },
        properties = { tag = tags[1][9] } },
-     { rule = { class = "gvim" },
-       properties = { tag = tags[1][4] } },
-     { rule = { class = "luakit" },
-       properties = { tag = tags[1][2] } },
-  
+      { rule = { class = "luakit" },
+       properties = { tag = tags[1][2] } }, 
 
 }
 -- }}}
